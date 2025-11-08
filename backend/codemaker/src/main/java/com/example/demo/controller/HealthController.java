@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class HealthController {
     @GetMapping("/")
     public String test(){
+        System.out.println(1);
         return "ok";
     }
 }
