@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import BasicLayout from '@/layouts/BasicLayout.vue'
-import { healthCheck } from '@/api/healthController.ts'
+import { useLoginUserStore } from '../src/stores/loginUser.ts'
 
-healthCheck().then((res) => {
-  console.log(res)
+const loginUserStore = useLoginUserStore()
+
+// 只在组件挂载时获取一次登录用户信息
+onMounted(() => {
+  loginUserStore.fetchLoginUser()
 })
-
 </script>
 
 <template>

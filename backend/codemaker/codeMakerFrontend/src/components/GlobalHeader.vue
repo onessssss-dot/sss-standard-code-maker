@@ -20,25 +20,50 @@
         />
       </a-col>
       <!-- 右侧：用户操作区域 -->
+
       <a-col>
         <div class="user-login-status">
-          <a-button type="primary">登录</a-button>
+          <div v-if="loginUserStore.loginUser.id">
+            <a-dropdown :trigger="['hover']">
+              <template #overlay>
+                <a-menu @click="handleUserMenuClick">
+                  <a-menu-item key="logout">
+                    <span>退出登录</span>
+                  </a-menu-item>
+                </a-menu>
+              </template>
+              <a-space style="cursor: pointer;">
+                <a-avatar :src="loginUserStore.loginUser.userAvatar" />
+                {{ loginUserStore.loginUser.userName ?? '这是一个默认名字' }}
+              </a-space>
+            </a-dropdown>
+          </div>
+          <div v-else>
+            <a-button type="primary" href="/user/login">登录</a-button>
+          </div>
         </div>
+
       </a-col>
     </a-row>
   </a-layout-header>
 </template>
 
 <script setup lang="ts">
-import { h, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import type { MenuProps } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
+import { userLogout } from '../api/userController'
+
+// JS 中引入 Store
+import { useLoginUserStore } from '../stores/loginUser.ts'
+const loginUserStore = useLoginUserStore()
 
 const router = useRouter()
 // 当前选中菜单
 const selectedKeys = ref<string[]>(['/'])
 // 监听路由变化，更新当前选中菜单
-router.afterEach((to, from, next) => {
+router.afterEach((to) => {
   selectedKeys.value = [to.path]
 })
 
@@ -64,6 +89,28 @@ const handleMenuClick: MenuProps['onClick'] = (e) => {
   // 跳转到对应页面
   if (key.startsWith('/')) {
     router.push(key)
+  }
+}
+
+// 处理用户下拉菜单点击
+const handleUserMenuClick: MenuProps['onClick'] = async (e) => {
+  const key = e.key as string
+  if (key === 'logout') {
+    await handleLogout()
+  }
+}
+
+/**
+ * 退出登录
+ */
+const handleLogout = async () => {
+  const res = await userLogout()
+  if (res.data.code === 0) {
+    // 清空登录用户信息
+    loginUserStore.clearLoginUser()
+    message.success('退出登录成功')
+  } else {
+    message.error('退出登录失败，' + res.data.message)
   }
 }
 </script>
