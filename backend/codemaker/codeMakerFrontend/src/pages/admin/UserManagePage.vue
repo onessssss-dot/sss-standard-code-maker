@@ -48,28 +48,28 @@
         @change="handleTableChange"
         row-key="id"
       >
-        <template #bodyCell="{ column, record }">
+    <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'userAvatar'">
             <a-avatar :src="record.userAvatar" :size="40">
               {{ record.userName?.charAt(0)?.toUpperCase() }}
             </a-avatar>
-          </template>
+      </template>
           <template v-else-if="column.key === 'userRole'">
             <a-tag :color="record.userRole === 'admin' ? 'red' : 'blue'">
               {{ record.userRole || 'user' }}
-            </a-tag>
+          </a-tag>
           </template>
           <template v-else-if="column.key === 'createTime'">
             {{ formatDate(record.createTime) }}
-          </template>
-          <template v-else-if="column.key === 'action'">
+      </template>
+      <template v-else-if="column.key === 'action'">
             <a-space>
               <a-button type="link" size="small" @click="handleEdit(record)">编辑</a-button>
               <a-button type="link" size="small" danger @click="handleDelete(record)">删除</a-button>
             </a-space>
-          </template>
-        </template>
-      </a-table>
+      </template>
+    </template>
+  </a-table>
     </a-card>
 
     <!-- 编辑用户模态框 -->
@@ -112,6 +112,7 @@ import {
   deleteUser,
   updateUser,
 } from '../../api/userController'
+import { useLoginUserStore } from '../../stores/loginUser'
 
 // 查询参数
 const queryParams = reactive<API.UserQueryRequest>({
@@ -125,6 +126,9 @@ const queryParams = reactive<API.UserQueryRequest>({
 // 表格数据
 const tableData = ref<API.UserVO[]>([])
 const loading = ref(false)
+
+// 获取当前登录用户信息
+const loginUserStore = useLoginUserStore()
 
 // 分页配置
 const pagination = reactive({
@@ -313,6 +317,12 @@ const handleEditCancel = () => {
  * 处理删除
  */
 const handleDelete = (record: API.UserVO) => {
+  // 检查是否要删除自己
+  if (record.id === loginUserStore.loginUser.id) {
+    message.warning('不能删除自己')
+    return
+  }
+
   Modal.confirm({
     title: '确认删除',
     content: `确定要删除用户 "${record.userName || record.userAccount}" 吗？`,

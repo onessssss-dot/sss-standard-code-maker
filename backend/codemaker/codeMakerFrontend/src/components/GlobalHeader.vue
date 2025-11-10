@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { MenuProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
@@ -67,8 +67,8 @@ router.afterEach((to) => {
   selectedKeys.value = [to.path]
 })
 
-// 菜单配置项
-const menuItems = ref([
+// 基础菜单配置项
+const baseMenuItems = [
   {
     key: '/',
     label: '首页',
@@ -79,8 +79,22 @@ const menuItems = ref([
     label: '关于',
     title: '关于我们',
   },
+]
 
-])
+// 根据用户权限动态生成菜单项
+const menuItems = computed(() => {
+  const items = [...baseMenuItems]
+  // 如果是管理员，添加用户管理入口
+  // 直接访问 store 中的 loginUser 以确保响应式追踪
+  if (loginUserStore.loginUser.userRole === 'admin') {
+    items.push({
+      key: '/admin/userManage',
+      label: '用户管理',
+      title: '用户管理',
+    })
+  }
+  return items
+})
 
 // 处理菜单点击
 const handleMenuClick: MenuProps['onClick'] = (e) => {
@@ -109,6 +123,11 @@ const handleLogout = async () => {
     // 清空登录用户信息
     loginUserStore.clearLoginUser()
     message.success('退出登录成功')
+    // 跳转到首页
+    router.push({
+      path: '/',
+      replace: true,
+    })
   } else {
     message.error('退出登录失败，' + res.data.message)
   }
