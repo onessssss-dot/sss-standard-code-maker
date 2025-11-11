@@ -4,11 +4,13 @@ import cn.hutool.core.bean.BeanUtil;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.dto.app.AppQueryRequest;
+import com.example.demo.model.entity.User;
 import com.example.demo.model.vo.AppVO;
 import com.example.demo.model.vo.UserVO;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import com.example.demo.model.entity.App;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -25,6 +27,8 @@ public interface AppService extends IService<App> {
      * @return
      */
     AppVO getAppVO(App app);
+
+    String deployApp(Long appId,User loginUser);
 
 
     /**
@@ -43,5 +47,13 @@ public interface AppService extends IService<App> {
      QueryWrapper getQueryWrapper(AppQueryRequest appQueryRequest);
 
 
+    /**
+     * 生成应用代码
+     * @param appId 应用ID
+     * @param message 生成提示词
+     * @param loginUser 登录用户
+     * @return
+     */
+     Flux<String> chatToGenCode(Long appId, String message, User loginUser);
 
 }

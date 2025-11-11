@@ -18,7 +18,7 @@ class AiCodeGeneratorFacadeTest {
 
     @Test
     void generate(){
-        File file = aiCodeGeneratorFacade.generateAndSaveCode("生成一个程序员ss的博客，不超过20行", CodeGenTypeEnum.MULTI_FILE);
+        File file = aiCodeGeneratorFacade.generateAndSaveCode("生成一个程序员ss的博客，不超过20行", CodeGenTypeEnum.MULTI_FILE,1L);
         Assertions.assertNotNull(file);
 
     }
@@ -26,7 +26,7 @@ class AiCodeGeneratorFacadeTest {
     @Test
     void generateStream(){
 
-        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream("生成一个程序员ss的博客，不超过20行", CodeGenTypeEnum.MULTI_FILE);
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream("生成一个程序员ss的博客，不超过20行", CodeGenTypeEnum.MULTI_FILE,2L);
 
         //阻塞等待所有数据收集 完成
         List<String> block = codeStream.collectList().block();

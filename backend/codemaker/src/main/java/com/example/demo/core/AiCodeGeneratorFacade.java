@@ -27,13 +27,16 @@ public class AiCodeGeneratorFacade {
     private AiCodeGeneratorService aiCodeGeneratorService;
 
 
-    /*
-    * 统一入口
-    * @param userMessage 用户提示词
-    * @param codeGenTypeEnum 生成类型
-    * @return 保存的目录
-    * */
-    public File generateAndSaveCode(String userMessage, CodeGenTypeEnum codeGenTypeEnum){
+
+
+    /**
+     * 统一入口
+     * @param userMessage 用户提示词
+     * @param codeGenTypeEnum 生成类型
+     * @param appId 保存的目录
+     * @return
+     */
+    public File generateAndSaveCode(String userMessage, CodeGenTypeEnum codeGenTypeEnum,Long appId){
         if (codeGenTypeEnum==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"生成类型不能为空");
         }
@@ -44,11 +47,11 @@ public class AiCodeGeneratorFacade {
                 HtmlCodeResult htmlCodeResult = aiCodeGeneratorService.generateHtmlCode(userMessage);
 
                 //返回文件对象
-                yield  CodeFileSaverExecutor.executeSaver(htmlCodeResult,CodeGenTypeEnum.HTML);
+                yield  CodeFileSaverExecutor.executeSaver(htmlCodeResult,CodeGenTypeEnum.HTML,appId);
             }
             case MULTI_FILE -> {
                 MultiFileCodeResult multiFileCodeResult = aiCodeGeneratorService.generateMultiFileCode(userMessage);
-                yield  CodeFileSaverExecutor.executeSaver(multiFileCodeResult,CodeGenTypeEnum.MULTI_FILE);
+                yield  CodeFileSaverExecutor.executeSaver(multiFileCodeResult,CodeGenTypeEnum.MULTI_FILE,appId);
             }
             default ->{
                 String errorMessage="不支持的生成类型："+codeGenTypeEnum.getValue();
@@ -57,13 +60,14 @@ public class AiCodeGeneratorFacade {
         };
     }
 
-    /*
+    /**
      * 统一入口(流式)
      * @param userMessage 用户提示词
      * @param codeGenTypeEnum 生成类型
-     * @return 保存的目录
-     * */
-    public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum){
+     * @param appId 应用ID
+     * @return
+     */
+    public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum,Long appId){
         if (codeGenTypeEnum==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"生成类型不能为空");
         }
@@ -71,11 +75,11 @@ public class AiCodeGeneratorFacade {
         return switch (codeGenTypeEnum){
             case HTML -> {
                 Flux<String> result = aiCodeGeneratorService.generateHtmlCodeStream(userMessage);
-                yield  processCodeStream(result,CodeGenTypeEnum.HTML);
+                yield  processCodeStream(result,CodeGenTypeEnum.HTML,appId);
             }
             case MULTI_FILE -> {
                 Flux<String> result = aiCodeGeneratorService.generateMultiFileCodeStream(userMessage);
-                yield processCodeStream(result,CodeGenTypeEnum.MULTI_FILE);
+                yield processCodeStream(result,CodeGenTypeEnum.MULTI_FILE,appId);
             }
             default ->{
                 String errorMessage="不支持的生成类型："+codeGenTypeEnum.getValue();
@@ -88,9 +92,10 @@ public class AiCodeGeneratorFacade {
      * 通用的流式代码处理方法
      * @param codeStream         代码留
      * @param codeGenTypeEnum    代码生成类型
+     * @param appId 应用ID
      * @return 流式响应
      */
-    private Flux<String> processCodeStream(Flux<String> codeStream,CodeGenTypeEnum codeGenTypeEnum) {
+    private Flux<String> processCodeStream(Flux<String> codeStream,CodeGenTypeEnum codeGenTypeEnum,Long appId) {
         //定义一个字符串拼接器用于当流式返回所有代码之后
 
         StringBuilder codeBuilder = new StringBuilder();
@@ -105,7 +110,7 @@ public class AiCodeGeneratorFacade {
                 //使用执行器解析代码
                 Object parsedResult = CodeParserExecutor.executeParser(completeCode, codeGenTypeEnum);
                 //使用执行器保存文件
-                File file = CodeFileSaverExecutor.executeSaver(parsedResult,codeGenTypeEnum);
+                File file = CodeFileSaverExecutor.executeSaver(parsedResult,codeGenTypeEnum,appId);
                 log.info("文件创建完成，目录为:{}",file.getAbsolutePath());
             }catch (Exception e){
                 log.info("保存失败：{}",e.getMessage());
