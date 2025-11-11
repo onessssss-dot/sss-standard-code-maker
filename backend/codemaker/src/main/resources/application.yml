@@ -7,6 +7,8 @@ spring:
     url: jdbc:mysql://localhost:3306/code_maker
     username: root
     password: 123456
+  profiles:
+    active: local
 server:
   port: 8123
   servlet:
@@ -27,3 +29,4 @@ logging:
   level:
     com.example.demo: debug
     com.baomidou.mybatisplus: debug
+
