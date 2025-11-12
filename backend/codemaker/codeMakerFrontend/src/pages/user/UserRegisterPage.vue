@@ -52,50 +52,49 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive } from 'vue';
-import { register } from "../../api/userController";
-import { useRouter } from "vue-router";
-import { message } from "ant-design-vue";
+import { reactive } from 'vue'
+import { register } from '@api/userController'
+import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 
 const formState = reactive<API.UserRegisterRequest>({
   userAccount: '',
   userPassword: '',
   checkPassword: '',
-});
+})
 
-const router = useRouter();
+const router = useRouter()
 
 /**
  * 验证确认密码
  */
 const validateCheckPassword = (_rule: any, value: string) => {
   if (!value) {
-    return Promise.reject('请再次输入密码');
+    return Promise.reject('请再次输入密码')
   }
   if (value !== formState.userPassword) {
-    return Promise.reject('两次输入的密码不一致');
+    return Promise.reject('两次输入的密码不一致')
   }
-  return Promise.resolve();
-};
+  return Promise.resolve()
+}
 
 /**
  * 提交表单
  * @param values
  */
 const handleSubmit = async (values: any) => {
-  const res = await register(values);
+  const res = await register(values)
   // 注册成功，跳转到登录页面
   if (res.data.code === 0) {
-    message.success('注册成功');
+    message.success('注册成功')
     router.push({
       path: '/user/login',
       replace: true,
-    });
+    })
   } else {
-    message.error('注册失败，' + res.data.message);
+    message.error('注册失败，' + res.data.message)
   }
-};
-
+}
 </script>
 
 <style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import BasicLayout from '@/layouts/BasicLayout.vue'
-import { useLoginUserStore } from '../src/stores/loginUser.ts'
+import { useLoginUserStore } from '@/stores/loginUser'
 
 const loginUserStore = useLoginUserStore()
 

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getLoginUser } from '../api/userController.ts'
+import { getLoginUser } from '@api/userController'
 
 export const useLoginUserStore = defineStore('loginUser', () => {
   // 默认值

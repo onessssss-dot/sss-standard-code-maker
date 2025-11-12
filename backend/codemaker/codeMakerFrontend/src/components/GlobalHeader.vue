@@ -53,10 +53,10 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { MenuProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
-import { userLogout } from '../api/userController'
+import { userLogout } from '@api/userController'
 
 // JS 中引入 Store
-import { useLoginUserStore } from '../stores/loginUser.ts'
+import { useLoginUserStore } from '@/stores/loginUser'
 const loginUserStore = useLoginUserStore()
 
 const router = useRouter()

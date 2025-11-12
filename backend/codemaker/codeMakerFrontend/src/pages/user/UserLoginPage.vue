@@ -39,18 +39,16 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { reactive } from 'vue';
-import {userLogin} from "../../api/userController";
-import {useLoginUserStore} from "../../stores/loginUser";
-import {useRouter} from "vue-router";
-import {message} from "ant-design-vue";
-
+import { reactive } from 'vue'
+import { userLogin } from '@api/userController'
+import { useLoginUserStore } from '@/stores/loginUser'
+import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 
 const formState = reactive<API.UserLoginRequest>({
   userAccount: '',
   userPassword: '',
-});
-
+})
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
@@ -73,7 +71,6 @@ const handleSubmit = async (values: any) => {
     message.error('登录失败，' + res.data.message)
   }
 }
-
 </script>
 <style>
 #userLoginPage {

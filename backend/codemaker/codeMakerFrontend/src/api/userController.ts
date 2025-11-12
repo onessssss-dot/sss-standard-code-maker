@@ -2,7 +2,7 @@
 /* eslint-disable */
 import request from '@/request'
 
-/** 添加用户 POST /user/add */
+/** 创建新用户（仅管理员） POST /user/add */
 export async function addUser(body: API.UserAddRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseLong>('/user/add', {
     method: 'POST',
@@ -14,7 +14,7 @@ export async function addUser(body: API.UserAddRequest, options?: { [key: string
   })
 }
 
-/** 删除用户 POST /user/delete */
+/** 根据 ID 删除用户 POST /user/delete */
 export async function deleteUser(body: API.DeleteRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean>('/user/delete', {
     method: 'POST',
@@ -26,7 +26,7 @@ export async function deleteUser(body: API.DeleteRequest, options?: { [key: stri
   })
 }
 
-/** 根据ID获取用户信息 GET /user/get */
+/** 获取用户详细信息（管理员视角） GET /user/get */
 export async function getUserById(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getUserByIdParams,
@@ -49,7 +49,7 @@ export async function getLoginUser(options?: { [key: string]: any }) {
   })
 }
 
-/** 根据ID获取用户去敏信息对象 GET /user/get/vo */
+/** 根据 ID 获取脱敏的用户展示信息 GET /user/get/vo */
 export async function getUserVoById(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getUserVOByIdParams,
@@ -64,7 +64,7 @@ export async function getUserVoById(
   })
 }
 
-/** 分页查询用户去敏信息列表 POST /user/list/page/vo */
+/** 条件分页查询脱敏用户列表 POST /user/list/page/vo */
 export async function listUserVoByPage(
   body: API.UserQueryRequest,
   options?: { [key: string]: any }
@@ -79,7 +79,7 @@ export async function listUserVoByPage(
   })
 }
 
-/** 用户登录 POST /user/login */
+/** 用户账号密码登录 POST /user/login */
 export async function userLogin(body: API.UserLoginRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseLoginUserVO>('/user/login', {
     method: 'POST',
@@ -91,7 +91,7 @@ export async function userLogin(body: API.UserLoginRequest, options?: { [key: st
   })
 }
 
-/** 用户登出 POST /user/logout */
+/** 退出登录 POST /user/logout */
 export async function userLogout(options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean>('/user/logout', {
     method: 'POST',
@@ -99,7 +99,7 @@ export async function userLogout(options?: { [key: string]: any }) {
   })
 }
 
-/** 用户注册 POST /user/register */
+/** 用户注册账号 POST /user/register */
 export async function register(body: API.UserRegisterRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseLong>('/user/register', {
     method: 'POST',
@@ -111,7 +111,7 @@ export async function register(body: API.UserRegisterRequest, options?: { [key: 
   })
 }
 
-/** 更新用户信息 POST /user/update */
+/** 更新个人用户信息 POST /user/update */
 export async function updateUser(body: API.UserUpdateRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean>('/user/update', {
     method: 'POST',

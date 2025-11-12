@@ -107,12 +107,8 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
-import {
-  listUserVoByPage,
-  deleteUser,
-  updateUser,
-} from '../../api/userController'
-import { useLoginUserStore } from '../../stores/loginUser'
+import { listUserVoByPage, deleteUser, updateUser } from '@api/userController'
+import { useLoginUserStore } from '@/stores/loginUser'
 
 // 查询参数
 const queryParams = reactive<API.UserQueryRequest>({
