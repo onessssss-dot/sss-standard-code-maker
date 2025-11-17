@@ -90,6 +90,11 @@ public class AppController {
 
         Flux<String> stringFlux = appService.chatToGenCode(appId, message, loginUser);
 
+
+
+
+
+
        return stringFlux.map(chunk->{
             Map<String, String> d = Map.of("d", chunk);
             String s = JSONUtil.toJsonStr(d);
