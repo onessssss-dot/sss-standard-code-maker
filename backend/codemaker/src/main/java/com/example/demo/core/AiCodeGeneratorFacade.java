@@ -2,6 +2,7 @@ package com.example.demo.core;
 
 
 import com.example.demo.ai.AiCodeGeneratorService;
+import com.example.demo.ai.AiCodeGeneratorServiceFactory;
 import com.example.demo.ai.model.HtmlCodeResult;
 import com.example.demo.ai.model.MultiFileCodeResult;
 import com.example.demo.common.ResultUtils;
@@ -24,7 +25,7 @@ import java.io.File;
 @Slf4j
 public class AiCodeGeneratorFacade {
     @Resource
-    private AiCodeGeneratorService aiCodeGeneratorService;
+    private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
 
 
 
@@ -40,8 +41,9 @@ public class AiCodeGeneratorFacade {
         if (codeGenTypeEnum==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"生成类型不能为空");
         }
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
 
-       return switch (codeGenTypeEnum){
+        return switch (codeGenTypeEnum){
             case HTML -> {
                 //向模型发送请求并接受对象
                 HtmlCodeResult htmlCodeResult = aiCodeGeneratorService.generateHtmlCode(userMessage);
@@ -71,7 +73,7 @@ public class AiCodeGeneratorFacade {
         if (codeGenTypeEnum==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"生成类型不能为空");
         }
-
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId);
         return switch (codeGenTypeEnum){
             case HTML -> {
                 Flux<String> result = aiCodeGeneratorService.generateHtmlCodeStream(userMessage);
