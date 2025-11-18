@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import com.example.demo.ai.AiCodeGeneratorService;
 import com.example.demo.constant.AppConstant;
 import com.example.demo.core.AiCodeGeneratorFacade;
+import com.example.demo.core.handler.StreamHandlerExecutor;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.exception.ThrowUtils;
@@ -55,6 +56,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
 
     @Resource
     private ChatHistoryService chatHistoryService;
+
+    @Resource
+    private StreamHandlerExecutor streamHandlerExecutor;
 
     @Override
     public AppVO getAppVO(App app) {
@@ -181,53 +185,26 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
 
     @Override
     public Flux<String> chatToGenCode(Long appId, String message, User loginUser) {
-
         //参数校验
         ThrowUtils.throwIf(appId==null||appId<0, ErrorCode.PARAMS_ERROR,"应用ID错误");
-
         ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR,"提示词不能为空");
         //查询应用信息
         App app = getById(appId);
-
         ThrowUtils.throwIf(app==null,ErrorCode.NOT_FOUND_ERROR,"应用不存在，请重新创建");
-
         //权限校验,仅本人可以和自己应用对话
-
         ThrowUtils.throwIf(!app.getUserId().equals(loginUser.getId()), ErrorCode.NO_AUTH_ERROR,"仅能对自己的应用进行操作");
         //获取生成模式
         String codeGenType = app.getCodeGenType();
-
         CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByValue(codeGenType);
-
         if (codeGenTypeEnum==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"类型错误");
         }
-
         chatHistoryService.addChatMessage(appId,message, ChatHistoryMessageTypeEnum.USER.getValue(),loginUser.getId());
-
-
         //调用AI生成代码
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
+        //收集AI响应内容，并在完成对话后保存到对话历史
+        return streamHandlerExecutor.doExecute(codeStream,chatHistoryService,appId,loginUser,codeGenTypeEnum);
 
-        Flux<String> contentFlux = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
-
-
-        //7.收集AI响应内容，并在完成对话后保存到对话历史
-        StringBuilder aiResponseBuilder = new StringBuilder();
-
-
-
-        return contentFlux.map(chunk->{
-            //实时响应AI响应的内容
-            aiResponseBuilder.append(chunk);
-            return chunk;
-        }).doOnComplete(()->{
-            //流式返回完成后，保存AI消息到对话历史中
-            String aiResponse = aiResponseBuilder.toString();
-            chatHistoryService.addChatMessage(appId,aiResponse,ChatHistoryMessageTypeEnum.AI.getValue(),loginUser.getId());
-        }).doOnError(error->{
-            String errorMessage="AI恢复失败"+error.getMessage();
-            chatHistoryService.addChatMessage(appId,errorMessage,ChatHistoryMessageTypeEnum.AI.getValue(),loginUser.getId());
-        });
     }
 
     /**
