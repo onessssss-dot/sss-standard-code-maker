@@ -3,6 +3,7 @@ package com.example.demo.service;
 import cn.hutool.core.bean.BeanUtil;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
+import com.example.demo.model.dto.app.AppAddRequest;
 import com.example.demo.model.dto.app.AppQueryRequest;
 import com.example.demo.model.entity.User;
 import com.example.demo.model.vo.AppVO;
@@ -56,4 +57,11 @@ public interface AppService extends IService<App> {
      */
      Flux<String> chatToGenCode(Long appId, String message, User loginUser);
 
+    /**
+     * 创建应用
+     * @param appAddRequest
+     * @param loginUser
+     * @return
+     */
+     Long createApp(AppAddRequest appAddRequest, User loginUser);
 }

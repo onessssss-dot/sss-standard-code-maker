@@ -5,13 +5,16 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.example.demo.ai.AiCodeGenTypeRoutingService;
 import com.example.demo.ai.AiCodeGeneratorService;
 import com.example.demo.constant.AppConstant;
 import com.example.demo.core.AiCodeGeneratorFacade;
+import com.example.demo.core.bulider.VueProjectBuilder;
 import com.example.demo.core.handler.StreamHandlerExecutor;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.exception.ThrowUtils;
+import com.example.demo.model.dto.app.AppAddRequest;
 import com.example.demo.model.dto.app.AppQueryRequest;
 import com.example.demo.model.entity.User;
 import com.example.demo.model.enums.ChatHistoryMessageTypeEnum;
@@ -60,6 +63,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
     @Resource
     private StreamHandlerExecutor streamHandlerExecutor;
 
+    @Resource
+    private VueProjectBuilder vueProjectBuilder;
+    @Resource
+    private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+
     @Override
     public AppVO getAppVO(App app) {
         if (app == null) {
@@ -107,6 +115,18 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         if (!sourceDir.exists()||!sourceDir.isDirectory()){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"对应应用文件不存在");
         }
+        //vue项目特殊处理，执行构建
+        CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByValue(codeGenType);
+        if (codeGenTypeEnum==CodeGenTypeEnum.VUE_PROJECT){
+            boolean buildSuccess=vueProjectBuilder.buildProject(sourceDirPath);
+            ThrowUtils.throwIf(buildSuccess,ErrorCode.SYSTEM_ERROR,"不饿构建失败，请重试");
+
+            File distDir=new File(sourceDirPath,"dist");
+            //构建完成后，需要将构建后的文件复制到部署目录
+            sourceDir=distDir;
+        }
+
+
         //复制文件到部署目录
         String deployDir=AppConstant.CODE_DEPLOY_ROOT_DIR+File.separator+deployKey;
 
@@ -227,6 +247,30 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         }
         //删除应用
         return super.removeById(id);
+    }
+
+
+
+
+    @Override
+    public Long createApp(AppAddRequest appAddRequest, User loginUser) {
+        // 参数校验
+        String initPrompt = appAddRequest.getInitPrompt();
+        ThrowUtils.throwIf(StrUtil.isBlank(initPrompt), ErrorCode.PARAMS_ERROR, "初始化 prompt 不能为空");
+        // 构造入库对象
+        App app = new App();
+        BeanUtil.copyProperties(appAddRequest, app);
+        app.setUserId(loginUser.getId());
+        // 应用名称暂时为 initPrompt 前 12 位
+        app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
+        // 使用 AI 智能选择代码生成类型
+        CodeGenTypeEnum selectedCodeGenType = aiCodeGenTypeRoutingService.routeCodeGenType(initPrompt);
+        app.setCodeGenType(selectedCodeGenType.getValue());
+        // 插入数据库
+        boolean result = this.save(app);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        log.info("应用创建成功，ID: {}, 类型: {}", app.getId(), selectedCodeGenType.getValue());
+        return app.getId();
     }
 
 
