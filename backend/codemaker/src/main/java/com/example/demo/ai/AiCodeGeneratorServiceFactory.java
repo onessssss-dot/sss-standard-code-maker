@@ -1,7 +1,7 @@
 package com.example.demo.ai;
 
 
-import com.example.demo.ai.tools.FileWriteTool;
+import com.example.demo.ai.tools.*;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
 import com.example.demo.model.enums.CodeGenTypeEnum;
@@ -42,6 +42,9 @@ public class AiCodeGeneratorServiceFactory {
 
     @Resource
     private ChatHistoryService chatHistoryService;
+
+    @Resource
+    private ToolManager toolManager;
 
     /**
      * AI 服务实例缓存
@@ -88,17 +91,18 @@ public class AiCodeGeneratorServiceFactory {
 
         //从数据库中加载对话历史到记忆中
         chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);
+
         return switch (codeGenType){
-            case VUE_PROJECT ->
-                //VUE项目生成，使用工具调用和推理模型
-                AiServices.builder(AiCodeGeneratorService.class)
-                        .chatModel(chatModel)
-                        .streamingChatModel(reasoningStreamingChatModel)
-                        .chatMemoryProvider(memoryId-> chatMemory)
-                        .tools(new FileWriteTool())
-                        .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(toolExecutionRequest,
-                                "error: there is no toll called"+toolExecutionRequest.name()))
-                        .build();
+            case VUE_PROJECT -> AiServices.builder(AiCodeGeneratorService.class)
+                    .streamingChatModel(reasoningStreamingChatModel)
+                    .chatMemoryProvider(memoryId -> chatMemory)
+                    .tools(
+                           toolManager.getAllTools()
+                    )
+                    .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
+                            toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
+                    ))
+                    .build();
 
             //html和多文件生成，使用流式对话模型
             case HTML,MULTI_FILE -> AiServices.builder(AiCodeGeneratorService.class)
