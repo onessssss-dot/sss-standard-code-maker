@@ -6,6 +6,8 @@ import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.PutObjectResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -16,6 +18,7 @@ import java.io.File;
  * @author yupi
  */
 @Component
+@ConditionalOnBean(CosClientConfig.class)
 @Slf4j
 public class CosManager {
 

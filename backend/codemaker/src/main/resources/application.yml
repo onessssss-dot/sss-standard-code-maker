@@ -16,6 +16,7 @@ spring:
       port: 6379
       password:
       ttl: 3600
+      database: 0
   session:
     store-type: redis
     # session 30 天过期
@@ -45,6 +46,15 @@ logging:
   level:
     com.example.demo: debug
     com.baomidou.mybatisplus: debug
+#监控
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
 
 
 

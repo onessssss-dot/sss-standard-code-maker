@@ -10,6 +10,8 @@ import com.example.demo.ai.model.message.AiResponseMessage;
 import com.example.demo.ai.model.message.ToolExecutedMessage;
 import com.example.demo.ai.model.message.ToolRequestMessage;
 import com.example.demo.common.ResultUtils;
+import com.example.demo.constant.AppConstant;
+import com.example.demo.core.bulider.VueProjectBuilder;
 import com.example.demo.core.parser.CodeParserExecutor;
 import com.example.demo.core.saver.CodeFileSaverExecutor;
 import com.example.demo.exception.BusinessException;
@@ -33,6 +35,8 @@ import java.io.File;
 public class AiCodeGeneratorFacade {
     @Resource
     private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
+    @Resource
+    private VueProjectBuilder vueProjectBuilder;
 
 
 
@@ -92,7 +96,7 @@ public class AiCodeGeneratorFacade {
             }
             case VUE_PROJECT -> {
                 TokenStream result = aiCodeGeneratorService.generateVueFileCodeStream(appId,userMessage);
-                yield processTokenStream(result);
+                yield processTokenStream(result,appId);
             }
             default ->{
                 String errorMessage="不支持的生成类型："+codeGenTypeEnum.getValue();
@@ -107,7 +111,7 @@ public class AiCodeGeneratorFacade {
      * @param tokenStream TokenStream 对象
      * @return Flux<String>
      */
-    private Flux<String> processTokenStream(TokenStream tokenStream) {
+    private Flux<String> processTokenStream(TokenStream tokenStream,Long appId) {
         return Flux.create(sink -> {
             tokenStream.onPartialResponse((String partialResponse) -> {
                         AiResponseMessage aiResponseMessage = new AiResponseMessage(partialResponse);
@@ -122,6 +126,10 @@ public class AiCodeGeneratorFacade {
                         sink.next(JSONUtil.toJsonStr(toolExecutedMessage));
                     })
                     .onCompleteResponse((ChatResponse response) -> {
+                        String projectPath= AppConstant.CODE_OUTPUT_ROOT_DIR+ File.separator+ "vue_project_" + appId;
+                        //同步构造vue项目
+                        vueProjectBuilder.buildProject(projectPath);
+
                         sink.complete();
                     })
                     .onError((Throwable error) -> {

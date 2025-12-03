@@ -1,6 +1,8 @@
 package com.example.demo.ai;
 
 
+import com.example.demo.ai.guardrail.PromptSafetyInputGuardrail;
+import com.example.demo.ai.guardrail.RetryOutputGuardrail;
 import com.example.demo.ai.tools.*;
 import com.example.demo.exception.BusinessException;
 import com.example.demo.exception.ErrorCode;
@@ -100,7 +102,10 @@ public class AiCodeGeneratorServiceFactory {
                     )
                     .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
                             toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
-                    ))
+                    ))//处理调用工具幻觉，若调用不存在的工具，继续调用而不是抛异常
+                    .inputGuardrails(new PromptSafetyInputGuardrail())//输入护轨
+                      .maxSequentialToolsInvocations(20)//最多连续调用20次工具
+                    //  .outputGuardrails(new RetryOutputGuardrail())//输出护轨，无法流式输出
                     .build();
             }
 
@@ -112,6 +117,7 @@ public class AiCodeGeneratorServiceFactory {
                     .chatModel(chatModel)
                     .streamingChatModel(openAiStringingChatModel)
                     .chatMemory(chatMemory)
+                    .inputGuardrails(new PromptSafetyInputGuardrail())//输入护轨
                     .build();
             }
             default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR,"不支持的代码生成类型"+codeGenType.getValue());

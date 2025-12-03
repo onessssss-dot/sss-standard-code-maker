@@ -22,6 +22,8 @@ import com.example.demo.model.enums.ChatHistoryMessageTypeEnum;
 import com.example.demo.model.enums.CodeGenTypeEnum;
 import com.example.demo.model.vo.AppVO;
 import com.example.demo.model.vo.UserVO;
+import com.example.demo.monitor.MonitorContext;
+import com.example.demo.monitor.MonitorContextHolder;
 import com.example.demo.service.ChatHistoryService;
 import com.example.demo.service.UserService;
 import com.mybatisflex.core.query.QueryWrapper;
@@ -221,11 +223,23 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         if (codeGenTypeEnum==null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"类型错误");
         }
-        chatHistoryService.addChatMessage(appId,message, ChatHistoryMessageTypeEnum.USER.getValue(),loginUser.getId());
-        //调用AI生成代码
+        // 通过校验后，添加用户消息到对话历史
+        chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
+        // 设置监控上下文
+        MonitorContextHolder.setContext(
+                MonitorContext.builder()
+                        .userId(loginUser.getId().toString())
+                        .appId(appId.toString())
+                        .build()
+        );
+        // 调用 AI 生成代码（流式）
         Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
-        //收集AI响应内容，并在完成对话后保存到对话历史
-        return streamHandlerExecutor.doExecute(codeStream,chatHistoryService,appId,loginUser,codeGenTypeEnum);
+        // 收集 AI 响应内容并在完成后记录到对话历史
+        return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenTypeEnum)
+                .doFinally(signalType -> {
+                    // 流结束时清理（无论成功/失败/取消）
+                    MonitorContextHolder.clearContext();
+                });
 
     }
 

@@ -17,13 +17,17 @@ import com.example.demo.model.dto.app.*;
 import com.example.demo.model.entity.User;
 import com.example.demo.model.enums.CodeGenTypeEnum;
 import com.example.demo.model.vo.AppVO;
+import com.example.demo.ratelimter.annotation.RateLimit;
+import com.example.demo.ratelimter.enums.RateLimitType;
 import com.example.demo.service.ProjectDownloadService;
 import com.example.demo.service.UserService;
+import com.example.demo.utils.CacheKeyUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
@@ -85,6 +89,7 @@ public class AppController {
      * @param request 请求体
      * @return 流式ServerSentEvent<String>数据 json
      */
+    @RateLimit(limitType = RateLimitType.USER,rate = 5,rateInterval = 60,message = "AI对话请求过于频繁，请稍后再试")
     @GetMapping(value = "/chat/gen/code",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
                                       @RequestParam String message,
@@ -283,6 +288,11 @@ public class AppController {
      * @param appQueryRequest 查询请求
      * @return 精选应用列表
      */
+    @Cacheable(
+            value = "good_app_page",
+            key = "T(com.example.demo.utils.CacheKeyUtils).generateKey(#appQueryRequest)",
+            condition = "#appQueryRequest.pageNum <= 10"
+    )
     @PostMapping("/good/list/page/vo")
     public BaseResponse<Page<AppVO>> listGoodAppVOByPage(@RequestBody AppQueryRequest appQueryRequest) {
         ThrowUtils.throwIf(appQueryRequest == null, ErrorCode.PARAMS_ERROR);
