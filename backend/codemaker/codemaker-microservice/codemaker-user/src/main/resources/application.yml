@@ -21,7 +21,11 @@ spring:
     store-type: redis
     # session 30 天过期
     timeout: 86400
-
+springdoc:
+  openapi:
+    group-configs:
+      - group: 'default'
+        packages-to-scan: com.example.demouser.controller
 server:
   port: 8124
   servlet:
@@ -30,6 +34,7 @@ server:
     session:
       cookie:
         max-age: 86400
+
 # knife4j
 knife4j:
   enable: true
